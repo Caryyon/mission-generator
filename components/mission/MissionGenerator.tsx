@@ -28,7 +28,7 @@ export function MissionGenerator() {
 
         // Create a fresh deck for redraws, removing the cards already used
         const fullDeck = createDeck();
-        const usedCards = cardsParam.split(",").map(decodeCard).filter((c): c is Card => c !== null);
+        const usedCards = cardsParam.split(",").map(decodeCard).filter((c): c is PlayingCard => c !== null);
 
         // Filter out used cards from deck
         const availableDeck = fullDeck.filter(
