@@ -1,0 +1,168 @@
+import { Suit, Rank } from "@/types/mission";
+
+export interface ElementData {
+  value: string;
+  suitModifier?: string;
+}
+
+export const LOCATION_DATA: Record<Rank, string> = {
+  [Rank.TWO]: "Wilderness / Forest / Swamp",
+  [Rank.THREE]: "Residence / Hotel",
+  [Rank.FOUR]: "Transportation Hub",
+  [Rank.FIVE]: "Water / Shoreline / Island",
+  [Rank.SIX]: "School / College",
+  [Rank.SEVEN]: "Retail / Office Space",
+  [Rank.EIGHT]: "Cemetery / Sacred Space",
+  [Rank.NINE]: "Hospital / Nursing Home",
+  [Rank.TEN]: "Factory / Laboratory",
+  [Rank.JACK]: "Museum / Library",
+  [Rank.QUEEN]: "Amusement Park",
+  [Rank.KING]: "Entertainment Venue",
+  [Rank.ACE]: "Back Alley / Back Road / Farm",
+};
+
+export const LOCATION_SUIT_MODIFIERS: Record<Suit, string> = {
+  [Suit.CLUBS]: "Abandoned: Why was it abandoned? How recently? Who or what is there now?",
+  [Suit.DIAMONDS]: "Secured: Security is tighter than expected here. Why the alarms, locks, and guards?",
+  [Suit.HEARTS]: "Hidden: It's hard to find, disguised, or doesn't appear on maps. How does it stay hidden?",
+  [Suit.SPADES]: "Dangerous: Maybe it's falling apart, on a toxic site, haunted, or infested with demons.",
+};
+
+export const GOAL_DATA: Record<Rank, string> = {
+  [Rank.TWO]: "Destroy",
+  [Rank.THREE]: "Control",
+  [Rank.FOUR]: "Rescue",
+  [Rank.FIVE]: "Defend",
+  [Rank.SIX]: "Negotiate With",
+  [Rank.SEVEN]: "Deliver",
+  [Rank.EIGHT]: "Preserve",
+  [Rank.NINE]: "Capture",
+  [Rank.TEN]: "Strengthen",
+  [Rank.JACK]: "Retrieve",
+  [Rank.QUEEN]: "Find",
+  [Rank.KING]: "Escort",
+  [Rank.ACE]: "Ally With",
+};
+
+export const GOAL_SUIT_MODIFIERS: Record<Suit, string> = {
+  [Suit.CLUBS]: "Quickly: The clock's ticking. Time's limited, or the longer it takes, the harder it becomes.",
+  [Suit.DIAMONDS]: "Quietly: Stealth is essential. This may be a deniable mission.",
+  [Suit.HEARTS]: "Destructively: Carry out the mission with extreme prejudice. Scorch the earth.",
+  [Suit.SPADES]: "Diplomatically: It's a complex, delicate situation. Make no waves, make no enemies.",
+};
+
+export const OBJECT_DATA: Record<Suit, Record<Rank, string>> = {
+  [Suit.CLUBS]: {
+    [Rank.TWO]: "Data Broker",
+    [Rank.THREE]: "Dealer",
+    [Rank.FOUR]: "Fixer",
+    [Rank.FIVE]: "Hacker",
+    [Rank.SIX]: "Bounty Hunter",
+    [Rank.SEVEN]: "Spy",
+    [Rank.EIGHT]: "Hitman",
+    [Rank.NINE]: "Inquisitor",
+    [Rank.TEN]: "Puppet Master",
+    [Rank.JACK]: "Magician",
+    [Rank.QUEEN]: "Occultist",
+    [Rank.KING]: "Mystic",
+    [Rank.ACE]: "Monster Slayer",
+  },
+  [Suit.DIAMONDS]: {
+    [Rank.TWO]: "Brawler",
+    [Rank.THREE]: "Con Artist",
+    [Rank.FOUR]: "Explorer",
+    [Rank.FIVE]: "Artist",
+    [Rank.SIX]: "Guardian",
+    [Rank.SEVEN]: "Investigator",
+    [Rank.EIGHT]: "Scientist",
+    [Rank.NINE]: "Clergy",
+    [Rank.TEN]: "Cop",
+    [Rank.JACK]: "Scholar",
+    [Rank.QUEEN]: "Thief",
+    [Rank.KING]: "Doctor",
+    [Rank.ACE]: "Activist",
+  },
+  [Suit.HEARTS]: {
+    [Rank.TWO]: "Prophecy",
+    [Rank.THREE]: "Plant",
+    [Rank.FOUR]: "Cult",
+    [Rank.FIVE]: "Weapon",
+    [Rank.SIX]: "Invention",
+    [Rank.SEVEN]: "Monster",
+    [Rank.EIGHT]: "Portal",
+    [Rank.NINE]: "Computer",
+    [Rank.TEN]: "Artwork",
+    [Rank.JACK]: "Vehicle",
+    [Rank.QUEEN]: "Book",
+    [Rank.KING]: "Animal",
+    [Rank.ACE]: "Artifact",
+  },
+  [Suit.SPADES]: {
+    [Rank.TWO]: "Newborn Bee",
+    [Rank.THREE]: "Disease",
+    [Rank.FOUR]: "Sacrifice",
+    [Rank.FIVE]: "Unveiling",
+    [Rank.SIX]: "Escape",
+    [Rank.SEVEN]: "Activism",
+    [Rank.EIGHT]: "Alliance",
+    [Rank.NINE]: "Political Maneuver",
+    [Rank.TEN]: "Ritual",
+    [Rank.JACK]: "Feast",
+    [Rank.QUEEN]: "Contest",
+    [Rank.KING]: "Music",
+    [Rank.ACE]: "Rogue Bee",
+  },
+};
+
+export const OBJECT_SUIT_LABELS: Record<Suit, string> = {
+  [Suit.CLUBS]: "Secret Worlder",
+  [Suit.DIAMONDS]: "Civilian",
+  [Suit.HEARTS]: "Item",
+  [Suit.SPADES]: "Miscellaneous",
+};
+
+export const OBSTACLE_DATA: Record<Rank, string> = {
+  [Rank.TWO]: "Zombies",
+  [Rank.THREE]: "Ak'ab",
+  [Rank.FOUR]: "Rival Agents",
+  [Rank.FIVE]: "Organized Crime",
+  [Rank.SIX]: "Government Agents",
+  [Rank.SEVEN]: "Scarecrows",
+  [Rank.EIGHT]: "Oni",
+  [Rank.NINE]: "Locusts",
+  [Rank.TEN]: "Filth",
+  [Rank.JACK]: "Vampires",
+  [Rank.QUEEN]: "Ghouls",
+  [Rank.KING]: "Jinn",
+  [Rank.ACE]: "Spectres",
+};
+
+export const OBSTACLE_SUIT_MODIFIERS: Record<Suit, string> = {
+  [Suit.CLUBS]: "Orochi Group: Choose one of its many subsidiaries.",
+  [Suit.DIAMONDS]: "Filth Cult: Is it Morninglight, Atenists, or something more local?",
+  [Suit.HEARTS]: "Phoenicians: What power do they gain from this endeavor?",
+  [Suit.SPADES]: "Big Three: Choose Dragon, Illuminati, or Templars, and their secret goal.",
+};
+
+export const TWIST_DATA: Record<Rank, string> = {
+  [Rank.TWO]: "Missing: The Object has vanished!",
+  [Rank.THREE]: "Betrayal: The cabal is betrayed by an ally.",
+  [Rank.FOUR]: "Reversal: Enemies are actually allies.",
+  [Rank.FIVE]: "Breakdown: Key equipment stops working.",
+  [Rank.SIX]: "Attached: Draw an Object; it's attached to your Object.",
+  [Rank.SEVEN]: "Hunted: Others are after the Object.",
+  [Rank.EIGHT]: "Damaged: The Object is hurt or broken.",
+  [Rank.NINE]: "Bad Intel: Vital data is wrong or missing.",
+  [Rank.TEN]: "Multiple: How to manage multiples of the Object?",
+  [Rank.JACK]: "Dragon Objective: Dragon heroes get own Goal, Object.",
+  [Rank.QUEEN]: "Illuminati Objective: Illuminati heroes get own Goal, Object.",
+  [Rank.KING]: "Templar Objective: Templar heroes get own Goal, Object.",
+  [Rank.ACE]: "Trap! The whole mission is a trap. Set by whom?",
+};
+
+export const TWIST_SUIT_MODIFIERS: Record<Suit, string> = {
+  [Suit.CLUBS]: "Location: Draw an additional Location. The cabal needs to visit here as well.",
+  [Suit.DIAMONDS]: "Goal: Draw an additional Goal. This might replace the original when the Twist comes up.",
+  [Suit.HEARTS]: "Object: Draw an additional Object. The heroes need to deal with this one too.",
+  [Suit.SPADES]: "Obstacle: Draw an additional Obstacle. Maybe the Obstacles will oppose each other?",
+};
