@@ -1,5 +1,5 @@
 import { GameConfig, GameId } from "@/types/game";
-import { Suit, Rank } from "@/types/mission";
+import { Suit, Rank, MissionElement } from "@/types/mission";
 
 export const starbreakerConfig: GameConfig = {
   id: GameId.STARBREAKER,
@@ -12,6 +12,11 @@ export const starbreakerConfig: GameConfig = {
   studioUrl: "https://staranvilstudios.com/",
   primaryColor: "#1a4d7a", // Deep space blue
   accentColor: "#00d9ff", // Cyan tech accent
+  elements: [
+    MissionElement.LOCATION, // Antagonist Faction
+    MissionElement.GOAL,     // Cast of Characters
+    MissionElement.OBJECT,   // Mission Profile
+  ],
   missionData: {
     // STEP 1: ANTAGONIST FACTION (SAINT)
     locations: {
@@ -127,52 +132,6 @@ export const starbreakerConfig: GameConfig = {
       [Suit.DIAMONDS]: "Knowledge/Treasure",
       [Suit.HEARTS]: "Person/Relationship",
       [Suit.SPADES]: "Thing/Enemy",
-    },
-
-    // ANTAGONIST FACTION (SYNDICATE) - for obstacle
-    obstacles: {
-      [Rank.TWO]: "Assassins Guild",
-      [Rank.THREE]: "Bounty Hunters League",
-      [Rank.FOUR]: "Outlaw Gravcycle Club",
-      [Rank.FIVE]: "Pirates of the Oridium Nebula",
-      [Rank.SIX]: "Atlantica Ship Works",
-      [Rank.SEVEN]: "Gorsht Manufacturing",
-      [Rank.EIGHT]: "Praxor & Gimble Pharmaceuticals",
-      [Rank.NINE]: "Remis Engineering",
-      [Rank.TEN]: "Vizon Corp",
-      [Rank.JACK]: "Arusan Trade Conglomerate",
-      [Rank.QUEEN]: "Vulkolasi Union",
-      [Rank.KING]: "Star Systems Alliance",
-      [Rank.ACE]: "Other government",
-    },
-    obstacleSuitModifiers: {
-      [Suit.CLUBS]: "Syndicate Antagonist Faction",
-      [Suit.DIAMONDS]: "Syndicate Antagonist Faction",
-      [Suit.HEARTS]: "Syndicate Antagonist Faction",
-      [Suit.SPADES]: "Syndicate Antagonist Faction",
-    },
-
-    // TWIST - Additional context or complications
-    twists: {
-      [Rank.TWO]: "Heist Team specialty",
-      [Rank.THREE]: "Infiltrators or Troubleshooters specialty",
-      [Rank.FOUR]: "Multiple crew types",
-      [Rank.FIVE]: "Strike Unit or Enforcers specialty",
-      [Rank.SIX]: "Multiple crew types",
-      [Rank.SEVEN]: "Mixed specialty mission",
-      [Rank.EIGHT]: "Investigation-focused mission",
-      [Rank.NINE]: "Protection-focused mission",
-      [Rank.TEN]: "Transport mission for all crews",
-      [Rank.JACK]: "Draw additional Mission Profile card",
-      [Rank.QUEEN]: "Draw additional Mission Profile card",
-      [Rank.KING]: "Draw additional Mission Profile card",
-      [Rank.ACE]: "Special: Choose from alternatives or roll",
-    },
-    twistSuitModifiers: {
-      [Suit.CLUBS]: "Complication: Something weird or hard to manage",
-      [Suit.DIAMONDS]: "Knowledge or Intelligence: Data must be protected or acquired",
-      [Suit.HEARTS]: "Relationship: Personal connections complicate the mission",
-      [Suit.SPADES]: "Combat: Violence is likely or necessary",
     },
   },
 };

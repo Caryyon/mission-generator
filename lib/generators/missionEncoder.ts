@@ -39,13 +39,14 @@ export function decodeCard(encoded: string): Card | null {
 
 // Encode entire mission to URL-friendly string
 export function encodeMission(mission: GeneratedMission): string {
-  const primaryCards = [
-    mission.location.card,
-    mission.goal.card,
-    mission.object.card,
-    mission.obstacle.card,
-    mission.twist.card,
-  ];
+  const primaryCards: Card[] = [];
+
+  // Only encode cards that have actual results (not dummy cards)
+  if (mission.location.result) primaryCards.push(mission.location.card);
+  if (mission.goal.result) primaryCards.push(mission.goal.card);
+  if (mission.object.result) primaryCards.push(mission.object.card);
+  if (mission.obstacle.result) primaryCards.push(mission.obstacle.card);
+  if (mission.twist.result) primaryCards.push(mission.twist.card);
 
   const additionalCards: Card[] = [];
 
@@ -66,19 +67,23 @@ export function encodeMission(mission: GeneratedMission): string {
 }
 
 // Decode URL string back to mission
-export function decodeMission(encoded: string, missionData: MissionData): GeneratedMission | null {
+export function decodeMission(encoded: string, missionData: MissionData, elements?: import("@/types/mission").MissionElement[]): GeneratedMission | null {
   if (!encoded) return null;
 
   const cardStrings = encoded.split(",");
-  if (cardStrings.length < 5) return null;
+
+  // Determine expected card count based on elements or missionData
+  const expectedPrimaryCount = elements?.length || (missionData.twists ? 5 : 3);
+
+  if (cardStrings.length < expectedPrimaryCount) return null;
 
   const cards = cardStrings.map(decodeCard).filter((c): c is Card => c !== null);
-  if (cards.length < 5) return null;
+  if (cards.length < expectedPrimaryCount) return null;
 
-  const primaryCards = cards.slice(0, 5);
-  const additionalCards = cards.slice(5);
+  const primaryCards = cards.slice(0, expectedPrimaryCount);
+  const additionalCards = cards.slice(expectedPrimaryCount);
 
-  return generateMission(primaryCards, missionData, additionalCards.length > 0 ? additionalCards : undefined);
+  return generateMission(primaryCards, missionData, additionalCards.length > 0 ? additionalCards : undefined, elements);
 }
 
 // Generate shareable URL for current mission

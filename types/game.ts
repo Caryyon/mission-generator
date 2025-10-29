@@ -1,4 +1,4 @@
-import { Suit, Rank } from "./mission";
+import { Suit, Rank, MissionElement } from "./mission";
 
 export enum GameId {
   SECRET_WORLD = "secret-world",
@@ -16,6 +16,7 @@ export interface GameConfig {
   studioUrl: string;
   primaryColor: string;
   accentColor: string;
+  elements: MissionElement[];
   missionData: MissionData;
 }
 
@@ -26,8 +27,8 @@ export interface MissionData {
   goalSuitModifiers: Record<Suit, string>;
   objects: Record<Suit, Record<Rank, string>>;
   objectSuitLabels: Record<Suit, string>;
-  obstacles: Record<Rank, string>;
-  obstacleSuitModifiers: Record<Suit, string>;
-  twists: Record<Rank, string>;
-  twistSuitModifiers: Record<Suit, string>;
+  obstacles?: Record<Rank, string>;
+  obstacleSuitModifiers?: Record<Suit, string>;
+  twists?: Record<Rank, string>;
+  twistSuitModifiers?: Record<Suit, string>;
 }

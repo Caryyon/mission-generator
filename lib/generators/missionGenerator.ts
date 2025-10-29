@@ -27,13 +27,13 @@ export function generateMissionElement(
       break;
 
     case MissionElement.OBSTACLE:
-      result = missionData.obstacles[card.rank];
-      suitModifier = missionData.obstacleSuitModifiers[card.suit];
+      result = missionData.obstacles?.[card.rank] || "";
+      suitModifier = missionData.obstacleSuitModifiers?.[card.suit] || "";
       break;
 
     case MissionElement.TWIST:
-      result = missionData.twists[card.rank];
-      suitModifier = missionData.twistSuitModifiers[card.suit];
+      result = missionData.twists?.[card.rank] || "";
+      suitModifier = missionData.twistSuitModifiers?.[card.suit] || "";
       break;
   }
 
@@ -44,7 +44,7 @@ export function generateMissionElement(
   };
 }
 
-export function detectAdditionalDraws(twistCard: Card): AdditionalDrawRequirement[] {
+export function detectAdditionalDrawsSecretWorld(twistCard: Card): AdditionalDrawRequirement[] {
   const requirements: AdditionalDrawRequirement[] = [];
 
   // Check suit-based additional draws
@@ -129,21 +129,71 @@ export function detectAdditionalDraws(twistCard: Card): AdditionalDrawRequiremen
   return requirements;
 }
 
-export function generateMission(cards: Card[], missionData: MissionData, additionalCards?: Card[]): GeneratedMission {
-  const [locationCard, goalCard, objectCard, obstacleCard, twistCard] = cards;
+export function detectAdditionalDrawsStarbreaker(objectCard: Card): AdditionalDrawRequirement[] {
+  const requirements: AdditionalDrawRequirement[] = [];
 
-  const location = generateMissionElement(MissionElement.LOCATION, locationCard, missionData);
+  // Face cards in Mission Profile require additional Mission Profile card
+  if (objectCard.rank === Rank.JACK || objectCard.rank === Rank.QUEEN || objectCard.rank === Rank.KING) {
+    requirements.push({
+      element: MissionElement.OBJECT,
+      reason: "Draw additional Mission Profile card",
+      label: "Additional Mission Profile"
+    });
+  }
+
+  return requirements;
+}
+
+export function detectAdditionalDraws(twistCard: Card): AdditionalDrawRequirement[] {
+  // Legacy function for backwards compatibility - defaults to Secret World
+  return detectAdditionalDrawsSecretWorld(twistCard);
+}
+
+export function generateMission(cards: Card[], missionData: MissionData, additionalCards?: Card[], elements?: MissionElement[]): GeneratedMission {
+  // Default to all 5 elements if not specified (for backwards compatibility)
+  const elementsToUse = elements || [
+    MissionElement.LOCATION,
+    MissionElement.GOAL,
+    MissionElement.OBJECT,
+    MissionElement.OBSTACLE,
+    MissionElement.TWIST,
+  ];
+
+  const location = generateMissionElement(MissionElement.LOCATION, cards[0], missionData);
   location.id = "primary-location";
-  const goal = generateMissionElement(MissionElement.GOAL, goalCard, missionData);
-  goal.id = "primary-goal";
-  const object = generateMissionElement(MissionElement.OBJECT, objectCard, missionData);
-  object.id = "primary-object";
-  const obstacle = generateMissionElement(MissionElement.OBSTACLE, obstacleCard, missionData);
-  obstacle.id = "primary-obstacle";
-  const twist = generateMissionElement(MissionElement.TWIST, twistCard, missionData);
-  twist.id = "primary-twist";
 
-  const additionalDrawRequirements = detectAdditionalDraws(twistCard);
+  const goal = generateMissionElement(MissionElement.GOAL, cards[1], missionData);
+  goal.id = "primary-goal";
+
+  const object = generateMissionElement(MissionElement.OBJECT, cards[2], missionData);
+  object.id = "primary-object";
+
+  // Only generate obstacle and twist if they're in the elements list
+  const obstacle = elementsToUse.includes(MissionElement.OBSTACLE) && cards[3]
+    ? generateMissionElement(MissionElement.OBSTACLE, cards[3], missionData)
+    : { element: MissionElement.OBSTACLE, card: { suit: Suit.CLUBS, rank: Rank.TWO }, result: "", id: "primary-obstacle" };
+  if (elementsToUse.includes(MissionElement.OBSTACLE)) {
+    obstacle.id = "primary-obstacle";
+  }
+
+  const twistIndex = elementsToUse.includes(MissionElement.OBSTACLE) ? 4 : 3;
+  const twist = elementsToUse.includes(MissionElement.TWIST) && cards[twistIndex]
+    ? generateMissionElement(MissionElement.TWIST, cards[twistIndex], missionData)
+    : { element: MissionElement.TWIST, card: { suit: Suit.CLUBS, rank: Rank.TWO }, result: "", id: "primary-twist" };
+  if (elementsToUse.includes(MissionElement.TWIST)) {
+    twist.id = "primary-twist";
+  }
+
+  // Detect additional draws based on the game type
+  let additionalDrawRequirements: AdditionalDrawRequirement[] = [];
+
+  if (elementsToUse.includes(MissionElement.TWIST) && twist.card) {
+    // Secret World: Check twist card for additional draws
+    additionalDrawRequirements = detectAdditionalDrawsSecretWorld(twist.card);
+  } else if (!elementsToUse.includes(MissionElement.TWIST) && !elementsToUse.includes(MissionElement.OBSTACLE)) {
+    // Starbreaker: Check object (Mission Profile) card for additional draws
+    additionalDrawRequirements = detectAdditionalDrawsStarbreaker(object.card);
+  }
 
   const mission: GeneratedMission = {
     location,

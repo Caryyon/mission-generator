@@ -1,5 +1,5 @@
 import { GameConfig, GameId } from "@/types/game";
-import { Suit, Rank } from "@/types/mission";
+import { Suit, Rank, MissionElement } from "@/types/mission";
 
 export const secretWorldConfig: GameConfig = {
   id: GameId.SECRET_WORLD,
@@ -12,6 +12,13 @@ export const secretWorldConfig: GameConfig = {
   studioUrl: "https://staranvilstudios.com/",
   primaryColor: "#7a2b1f",
   accentColor: "#c19a6b",
+  elements: [
+    MissionElement.LOCATION,
+    MissionElement.GOAL,
+    MissionElement.OBJECT,
+    MissionElement.OBSTACLE,
+    MissionElement.TWIST,
+  ],
   missionData: {
     locations: {
       [Rank.TWO]: "Wilderness / Forest / Swamp",

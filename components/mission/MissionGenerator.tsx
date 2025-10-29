@@ -46,8 +46,11 @@ export function MissionGenerator() {
   // Load mission from URL on mount
   useEffect(() => {
     const cardsParam = searchParams.get("cards");
-    if (cardsParam) {
-      const loadedMission = decodeMission(cardsParam, gameConfig.missionData);
+    const gameParam = searchParams.get("game");
+
+    // Only load mission if the game parameter matches the selected game
+    if (cardsParam && gameParam === selectedGame) {
+      const loadedMission = decodeMission(cardsParam, gameConfig.missionData, gameConfig.elements);
       if (loadedMission) {
         setMission(loadedMission);
 
@@ -90,8 +93,12 @@ export function MissionGenerator() {
         });
         setPendingNestedDraws(newPendingDraws);
       }
+    } else if (!gameParam || gameParam !== selectedGame) {
+      // Clear mission if game parameter doesn't match
+      setMission(null);
+      setDeck([]);
     }
-  }, [searchParams]);
+  }, [searchParams, selectedGame, gameConfig.missionData]);
 
   const updateMissionUrl = (newMission: GeneratedMission) => {
     const encoded = encodeMission(newMission);
@@ -100,8 +107,9 @@ export function MissionGenerator() {
 
   const generateNewMission = () => {
     const newDeck = shuffleDeck(createDeck());
-    const { drawn, remaining } = drawCards(newDeck, 5);
-    const newMission = generateMission(drawn, gameConfig.missionData);
+    const cardCount = gameConfig.elements.length;
+    const { drawn, remaining } = drawCards(newDeck, cardCount);
+    const newMission = generateMission(drawn, gameConfig.missionData, [], gameConfig.elements);
     setMission(newMission);
     setDeck(remaining);
     setShowAdditionalDrawPrompt(newMission.additionalDrawRequirements.length > 0);
@@ -130,10 +138,15 @@ export function MissionGenerator() {
     const numRequired = mission.additionalDrawRequirements.length;
     const { drawn, remaining } = drawCards(deck, numRequired);
 
+    const cards = [mission.location.card, mission.goal.card, mission.object.card];
+    if (gameConfig.elements.includes(MissionElement.OBSTACLE)) cards.push(mission.obstacle.card);
+    if (gameConfig.elements.includes(MissionElement.TWIST)) cards.push(mission.twist.card);
+
     const updatedMission = generateMission(
-      [mission.location.card, mission.goal.card, mission.object.card, mission.obstacle.card, mission.twist.card],
+      cards,
       gameConfig.missionData,
-      drawn
+      drawn,
+      gameConfig.elements
     );
 
     setMission(updatedMission);
@@ -177,7 +190,7 @@ export function MissionGenerator() {
 
     // Generate nested elements for this additional element
     targetElement.nestedElements = drawn.map((card, idx) => {
-      const element = generateMission([card], gameConfig.missionData, [])[targetElement.card.element];
+      const element = generateMission([card], gameConfig.missionData, [], gameConfig.elements)[targetElement.card.element];
       return {
         card: element,
         requiresMoreDraws: false,
@@ -237,7 +250,7 @@ export function MissionGenerator() {
           existingAdditionalCards.push(elem.card.card);
         });
 
-        const newMission = generateMission(cards, gameConfig.missionData, existingAdditionalCards);
+        const newMission = generateMission(cards, gameConfig.missionData, existingAdditionalCards, gameConfig.elements);
         setMission(newMission);
         setDeck(remaining);
         setShowAdditionalDrawPrompt(newMission.additionalDrawRequirements.length > 0);
@@ -524,12 +537,12 @@ export function MissionGenerator() {
 
       {mission && (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-            {renderMissionElement(isStarbreaker ? "Antagonist Faction" : "Location", MissionElement.LOCATION, mission.location)}
-            {renderMissionElement(isStarbreaker ? "Cast Member" : "Goal", MissionElement.GOAL, mission.goal)}
-            {renderMissionElement(isStarbreaker ? "Mission Profile" : "Object", MissionElement.OBJECT, mission.object)}
-            {renderMissionElement(isStarbreaker ? "Opposition" : "Obstacle", MissionElement.OBSTACLE, mission.obstacle)}
-            {renderMissionElement("Twist", MissionElement.TWIST, mission.twist)}
+          <div className={`grid gap-4 sm:grid-cols-2 lg:grid-cols-3 ${gameConfig.elements.length === 5 ? 'xl:grid-cols-5' : 'xl:grid-cols-3'}`}>
+            {gameConfig.elements.includes(MissionElement.LOCATION) && renderMissionElement(isStarbreaker ? "Antagonist Faction" : "Location", MissionElement.LOCATION, mission.location)}
+            {gameConfig.elements.includes(MissionElement.GOAL) && renderMissionElement(isStarbreaker ? "Cast Member" : "Goal", MissionElement.GOAL, mission.goal)}
+            {gameConfig.elements.includes(MissionElement.OBJECT) && renderMissionElement(isStarbreaker ? "Mission Profile" : "Object", MissionElement.OBJECT, mission.object)}
+            {gameConfig.elements.includes(MissionElement.OBSTACLE) && renderMissionElement(isStarbreaker ? "Opposition" : "Obstacle", MissionElement.OBSTACLE, mission.obstacle)}
+            {gameConfig.elements.includes(MissionElement.TWIST) && renderMissionElement("Twist", MissionElement.TWIST, mission.twist)}
           </div>
         </>
       )}
