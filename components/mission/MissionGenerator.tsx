@@ -8,21 +8,46 @@ import { generateMission } from "@/lib/generators/missionGenerator";
 import { encodeMission, decodeMission, decodeCard } from "@/lib/generators/missionEncoder";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { GameSelector } from "@/components/GameSelector";
+import { getDefaultGame, getGameConfig, GameId } from "@/lib/games";
+import type { GameConfig } from "@/lib/games";
 
 export function MissionGenerator() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [selectedGame, setSelectedGame] = useState<GameId>(GameId.SECRET_WORLD);
+  const [gameConfig, setGameConfig] = useState<GameConfig>(getDefaultGame());
   const [mission, setMission] = useState<GeneratedMission | null>(null);
   const [deck, setDeck] = useState<PlayingCard[]>([]);
   const [showAdditionalDrawPrompt, setShowAdditionalDrawPrompt] = useState(false);
   const [pendingNestedDraws, setPendingNestedDraws] = useState<Map<string, number>>(new Map());
   const [showCopySuccess, setShowCopySuccess] = useState(false);
 
+  // Handle game selection changes
+  const handleGameChange = (newGameId: GameId) => {
+    setSelectedGame(newGameId);
+    setGameConfig(getGameConfig(newGameId));
+    // Clear mission when switching games
+    setMission(null);
+    setDeck([]);
+    router.push(`?game=${newGameId}`, { scroll: false });
+  };
+
+  // Load game from URL on mount
+  useEffect(() => {
+    const gameParam = searchParams.get("game");
+    if (gameParam && Object.values(GameId).includes(gameParam as GameId)) {
+      const gameId = gameParam as GameId;
+      setSelectedGame(gameId);
+      setGameConfig(getGameConfig(gameId));
+    }
+  }, []);
+
   // Load mission from URL on mount
   useEffect(() => {
     const cardsParam = searchParams.get("cards");
     if (cardsParam) {
-      const loadedMission = decodeMission(cardsParam);
+      const loadedMission = decodeMission(cardsParam, gameConfig.missionData);
       if (loadedMission) {
         setMission(loadedMission);
 
@@ -70,13 +95,13 @@ export function MissionGenerator() {
 
   const updateMissionUrl = (newMission: GeneratedMission) => {
     const encoded = encodeMission(newMission);
-    router.push(`?cards=${encoded}`, { scroll: false });
+    router.push(`?game=${selectedGame}&cards=${encoded}`, { scroll: false });
   };
 
   const generateNewMission = () => {
     const newDeck = shuffleDeck(createDeck());
     const { drawn, remaining } = drawCards(newDeck, 5);
-    const newMission = generateMission(drawn);
+    const newMission = generateMission(drawn, gameConfig.missionData);
     setMission(newMission);
     setDeck(remaining);
     setShowAdditionalDrawPrompt(newMission.additionalDrawRequirements.length > 0);
@@ -107,6 +132,7 @@ export function MissionGenerator() {
 
     const updatedMission = generateMission(
       [mission.location.card, mission.goal.card, mission.object.card, mission.obstacle.card, mission.twist.card],
+      gameConfig.missionData,
       drawn
     );
 
@@ -151,7 +177,7 @@ export function MissionGenerator() {
 
     // Generate nested elements for this additional element
     targetElement.nestedElements = drawn.map((card, idx) => {
-      const element = generateMission([card], [])[targetElement.card.element];
+      const element = generateMission([card], gameConfig.missionData, [])[targetElement.card.element];
       return {
         card: element,
         requiresMoreDraws: false,
@@ -211,7 +237,7 @@ export function MissionGenerator() {
           existingAdditionalCards.push(elem.card.card);
         });
 
-        const newMission = generateMission(cards, existingAdditionalCards);
+        const newMission = generateMission(cards, gameConfig.missionData, existingAdditionalCards);
         setMission(newMission);
         setDeck(remaining);
         setShowAdditionalDrawPrompt(newMission.additionalDrawRequirements.length > 0);
@@ -247,23 +273,60 @@ export function MissionGenerator() {
     onDrawNested?: () => void
   ) => {
     const cardColor = getCardColor(cardData.card);
+    const cardClass = isStarbreaker
+      ? `relative h-full flex flex-col starbreaker-card ${isAdditional ? 'starbreaker-card-highlight' : ''}`
+      : `relative parchment-card h-full flex flex-col ${isAdditional ? 'border-[#8b3a2a] border-[3px]' : ''}`;
+    const titleColor = isStarbreaker ? "text-[rgba(0,217,255,0.7)]" : "text-[#2a1810]";
+    const contentColor = isStarbreaker ? "text-[#e8f4f8]" : "text-[#3a2a1a]";
+
     return (
-      <Card className={`relative parchment-card ${isAdditional ? 'border-[#8b3a2a] border-[3px]' : ''}`}>
-        <CardHeader>
-          <div className="flex items-center justify-between gap-3">
+      <Card className={cardClass}>
+        <CardHeader className={isStarbreaker ? "starbreaker-card-header pb-3" : "pb-3"}>
+          <div className="flex items-start justify-between gap-2">
             <div className="flex-1">
-              <CardTitle className="text-base font-semibold text-[#2a1810] uppercase tracking-wider">{title}</CardTitle>
-              <CardDescription className="text-3xl font-bold mt-2" style={{ fontFamily: 'var(--font-cinzel), Georgia, serif', color: cardColor }}>
+              <CardTitle
+                className="uppercase tracking-wider"
+                style={isStarbreaker ? {
+                  fontFamily: 'var(--font-cinzel)',
+                  fontSize: '0.625rem',
+                  fontWeight: 600,
+                  color: 'rgba(0, 217, 255, 0.7)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em',
+                  marginBottom: '0.625rem',
+                } : {}}
+              >
+                {title}
+              </CardTitle>
+              <CardDescription
+                className="mt-2"
+                style={isStarbreaker ? {
+                  fontFamily: 'var(--font-cinzel), Georgia, serif',
+                  fontSize: '2rem',
+                  fontWeight: 700,
+                  color: cardColor === '#ff4466' ? '#ff3355' : '#ffffff',
+                  lineHeight: 1,
+                  letterSpacing: '0.02em',
+                } : {
+                  fontFamily: 'var(--font-cinzel), Georgia, serif',
+                  fontSize: '2rem',
+                  fontWeight: 700,
+                  color: cardColor,
+                }}
+              >
                 {getCardDisplay(cardData.card)}
               </CardDescription>
             </div>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
             {hasNestedDraws && onDrawNested && (
               <Button
                 variant="default"
                 size="sm"
                 onClick={onDrawNested}
-                className="secret-world-box text-[#f4ead5] hover:opacity-90 transition-opacity text-xs px-3"
+                className={isStarbreaker
+                  ? "starbreaker-btn-primary text-xs px-2 py-1 h-auto"
+                  : "secret-world-box text-[#f4ead5] hover:opacity-90 transition-opacity text-xs px-2 py-1 h-auto"
+                }
               >
                 Draw {nestedDrawCount}
               </Button>
@@ -273,15 +336,37 @@ export function MissionGenerator() {
               size="sm"
               onClick={() => cardData.id && redrawElement(cardData.id)}
               disabled={deck.length < 1}
-              className="border-[#b8a989] hover:bg-[#d4c4a8] text-[#2a1810] text-xs px-3"
+              className={isStarbreaker
+                ? "starbreaker-btn-secondary text-xs px-2 py-1 h-auto"
+                : "border-[#b8a989] hover:bg-[#d4c4a8] text-[#2a1810] text-xs px-2 py-1 h-auto"
+              }
             >
               Redraw
             </Button>
           </div>
         </div>
       </CardHeader>
-      <CardContent>
-        <p className="whitespace-pre-line text-base leading-relaxed text-[#3a2a1a]">{cardData.result}</p>
+      <CardContent
+        className="pt-0 flex-1"
+        style={isStarbreaker ? {
+          padding: '1rem 1.25rem 1.25rem',
+        } : {}}
+      >
+        <p
+          className="whitespace-pre-line leading-relaxed"
+          style={isStarbreaker ? {
+            fontFamily: 'var(--font-cormorant)',
+            fontSize: '0.9375rem',
+            fontWeight: 400,
+            lineHeight: 1.6,
+            color: '#e8f4f8',
+          } : {
+            fontSize: '0.875rem',
+            color: '#3a2a1a',
+          }}
+        >
+          {cardData.result}
+        </p>
       </CardContent>
     </Card>
     );
@@ -311,56 +396,85 @@ export function MissionGenerator() {
     );
   };
 
+  const isStarbreaker = selectedGame === GameId.STARBREAKER;
+  const headerBg = isStarbreaker
+    ? "bg-gradient-to-b from-[#0a1929] via-[#1a2942] to-[#0d1b2a]"
+    : "bg-gradient-to-b from-[#e8e8e8] via-[#f5f5f5] to-white";
+  const headerBorder = isStarbreaker ? "border-[#00d9ff]" : "border-[#d0d0d0]";
+  const cardBg = isStarbreaker ? "bg-gradient-to-br from-[#1a2942] to-[#0d1b2a]" : "";
+  const textColor = isStarbreaker ? "text-[#e8f4f8]" : "text-[#2a1810]";
+  const mutedTextColor = isStarbreaker ? "text-[#a0c4d4]" : "text-[#5a4a3a]";
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-6">
-        <div className="flex items-center justify-center">
+        <div className={`flex items-center justify-center ${headerBg} py-8 -mx-4 px-4 border-b-2 ${headerBorder} shadow-sm`}>
           <img
-            src="/TSW_Logo_1Line.png"
-            alt="The Secret World"
-            className="h-24 md:h-32 w-auto object-contain"
+            src={gameConfig.logo}
+            alt={gameConfig.logoAlt}
+            className="h-14 md:h-16 w-auto object-contain drop-shadow-md"
           />
         </div>
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-[#2a1810] occult-header mb-2">
-              Mission Generator
-            </h1>
-            <p className="text-base text-[#5a4a3a] italic" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
-              Generate missions using the card-based system
-            </p>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-3">
+            <label className={`text-sm font-semibold ${textColor} uppercase tracking-wider`}>Game:</label>
+            <GameSelector selectedGame={selectedGame} onGameChange={handleGameChange} />
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <h1 className={`text-2xl md:text-3xl font-bold ${textColor} occult-header mb-1`}>
+                {isStarbreaker ? "Adventure Generator" : "Mission Generator"}
+              </h1>
+              <p className={`text-sm md:text-base ${mutedTextColor} italic`} style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
+                {gameConfig.tagline}
+              </p>
+            </div>
+          <div className="flex flex-wrap gap-3">
             {mission && (
               <Button
                 onClick={shareMission}
                 size="lg"
                 variant="outline"
-                className="border-[#7a2b1f] border-2 text-[#7a2b1f] hover:bg-[#7a2b1f] hover:text-[#f4ead5] px-6 py-6 text-base uppercase tracking-wider"
+                className={isStarbreaker
+                  ? "starbreaker-btn-secondary px-4 py-2 text-sm md:text-base uppercase tracking-wider"
+                  : "border-[#7a2b1f] border-2 text-[#7a2b1f] hover:bg-[#7a2b1f] hover:text-[#f4ead5] px-4 py-2 text-sm md:text-base uppercase tracking-wider"
+                }
               >
-                {showCopySuccess ? "✓ Copied!" : "Share Mission"}
+                {showCopySuccess ? "✓ Copied!" : isStarbreaker ? "Share Adventure" : "Share Mission"}
               </Button>
             )}
             <Button
               onClick={generateNewMission}
               size="lg"
-              className="secret-world-box text-[#f4ead5] hover:opacity-90 transition-opacity px-8 py-6 text-lg uppercase tracking-wider"
+              className={isStarbreaker
+                ? "starbreaker-btn-primary px-6 py-2 text-sm md:text-base uppercase tracking-wider"
+                : "secret-world-box text-[#f4ead5] hover:opacity-90 transition-opacity px-6 py-2 text-sm md:text-base uppercase tracking-wider"
+              }
             >
-              {mission ? "New Mission" : "Generate Mission"}
+              {mission ? (isStarbreaker ? "New Adventure" : "New Mission") : (isStarbreaker ? "Generate Adventure" : "Generate Mission")}
             </Button>
           </div>
         </div>
+        </div>
 
         {!mission && (
-          <Card className="parchment-card">
+          <Card className={isStarbreaker
+            ? "starbreaker-card"
+            : "parchment-card"
+          }>
             <CardContent className="pt-6 pb-8">
               <div className="max-w-3xl mx-auto space-y-4">
-                <p className="text-center text-[#3a2a1a] text-lg leading-relaxed">
-                  Generate missions using the card-based system from the <strong>Secret World RPG</strong>.
-                  Draw cards to determine your mission&apos;s Location, Goal, Object, Obstacle, and Twist.
+                <p className={`text-center text-lg leading-relaxed ${isStarbreaker ? 'text-[#e8f4f8]' : 'text-[#3a2a1a]'}`}>
+                  {isStarbreaker ? (
+                    <>Generate adventures using the card-based system from <strong className="text-[#00d9ff]">Starbreaker</strong>.
+                    Draw cards to determine your adventure&apos;s Antagonist Faction, Cast of Characters, and Mission Profile.</>
+                  ) : (
+                    <>Generate missions using the card-based system from the <strong>Secret World RPG</strong>.
+                    Draw cards to determine your mission&apos;s Location, Goal, Object, Obstacle, and Twist.</>
+                  )}
                 </p>
-                <p className="text-center text-[#5a4a3a] italic">
-                  Click &quot;Generate Mission&quot; to draw cards and create a new mission.
+                <p className={`text-center italic ${isStarbreaker ? 'text-[#a8c7d7]' : 'text-[#5a4a3a]'}`}>
+                  Click &quot;{isStarbreaker ? 'Generate Adventure' : 'Generate Mission'}&quot; to draw cards and create a new {isStarbreaker ? 'adventure' : 'mission'}.
                   Each element is determined by a card&apos;s suit and value. The generator is a tool to inspire
                   your creativity, not a tyrant.
                 </p>
@@ -371,27 +485,35 @@ export function MissionGenerator() {
       </div>
 
       {mission && showAdditionalDrawPrompt && (
-        <Card className="secret-world-box border-[#4a1810]">
+        <Card className={isStarbreaker
+          ? "starbreaker-card starbreaker-card-highlight"
+          : "secret-world-box border-[#4a1810]"
+        }>
           <CardHeader>
-            <CardTitle className="text-[#f4ead5] text-xl uppercase tracking-wider">Additional Draws Required</CardTitle>
+            <CardTitle className={`text-xl uppercase tracking-wider ${isStarbreaker ? 'text-[#00d9ff]' : 'text-[#f4ead5]'}`}>
+              Additional Draws Required
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-base text-[#f4ead5]/90">
-              The Twist card requires drawing additional elements:
+            <p className={`text-base ${isStarbreaker ? 'text-[#e8f4f8]/90' : 'text-[#f4ead5]/90'}`}>
+              {isStarbreaker ? 'The twist requires drawing additional details:' : 'The Twist card requires drawing additional elements:'}
             </p>
-            <ul className="space-y-2 text-[#f4ead5]/90">
+            <ul className={`space-y-2 ${isStarbreaker ? 'text-[#e8f4f8]/90' : 'text-[#f4ead5]/90'}`}>
               {mission.additionalDrawRequirements.map((req, idx) => (
                 <li key={idx} className="flex items-start gap-2">
-                  <span className="text-[#c19a6b] mt-1">•</span>
+                  <span className={`mt-1 ${isStarbreaker ? 'text-[#00d9ff]' : 'text-[#c19a6b]'}`}>•</span>
                   <span>
-                    <strong className="text-[#f4ead5]">{req.label}</strong>: {req.reason}
+                    <strong className={isStarbreaker ? 'text-[#00d9ff]' : 'text-[#f4ead5]'}>{req.label}</strong>: {req.reason}
                   </span>
                 </li>
               ))}
             </ul>
             <Button
               onClick={drawAdditionalElements}
-              className="w-full bg-[#c19a6b] hover:bg-[#a88556] text-[#2a1810] font-semibold uppercase tracking-wider"
+              className={isStarbreaker
+                ? "w-full starbreaker-btn-primary font-semibold uppercase tracking-wider"
+                : "w-full bg-[#c19a6b] hover:bg-[#a88556] text-[#2a1810] font-semibold uppercase tracking-wider"
+              }
             >
               Draw {mission.additionalDrawRequirements.length} Additional Card
               {mission.additionalDrawRequirements.length > 1 ? 's' : ''}
@@ -401,19 +523,23 @@ export function MissionGenerator() {
       )}
 
       {mission && (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {renderMissionElement("Location", MissionElement.LOCATION, mission.location)}
-          {renderMissionElement("Goal", MissionElement.GOAL, mission.goal)}
-          {renderMissionElement("Object", MissionElement.OBJECT, mission.object)}
-          {renderMissionElement("Obstacle", MissionElement.OBSTACLE, mission.obstacle)}
-          {renderMissionElement("Twist", MissionElement.TWIST, mission.twist)}
-        </div>
+        <>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+            {renderMissionElement(isStarbreaker ? "Antagonist Faction" : "Location", MissionElement.LOCATION, mission.location)}
+            {renderMissionElement(isStarbreaker ? "Cast Member" : "Goal", MissionElement.GOAL, mission.goal)}
+            {renderMissionElement(isStarbreaker ? "Mission Profile" : "Object", MissionElement.OBJECT, mission.object)}
+            {renderMissionElement(isStarbreaker ? "Opposition" : "Obstacle", MissionElement.OBSTACLE, mission.obstacle)}
+            {renderMissionElement("Twist", MissionElement.TWIST, mission.twist)}
+          </div>
+        </>
       )}
 
       {mission && (mission.additionalLocations || mission.additionalGoals || mission.additionalObjects || mission.additionalObstacles) && (
         <div className="space-y-6">
-          <h2 className="text-3xl font-bold text-[#7a2b1f] occult-header border-b-2 border-[#b8a989] pb-2">Additional Elements</h2>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <h2 className={`text-2xl md:text-3xl font-bold ${isStarbreaker ? 'text-[#00d9ff]' : 'text-[#7a2b1f]'} occult-header border-b-2 ${isStarbreaker ? 'border-[#00d9ff]' : 'border-[#b8a989]'} pb-2`}>
+            {isStarbreaker ? "Additional Details" : "Additional Elements"}
+          </h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {mission.additionalLocations?.map((loc, idx) => {
               const req = mission.additionalDrawRequirements.find(r => r.element === MissionElement.LOCATION);
               const hasPendingDraws = loc.card.id ? pendingNestedDraws.has(loc.card.id) : false;
@@ -492,18 +618,18 @@ export function MissionGenerator() {
         </div>
       )}
 
-      <div className="flex items-center justify-between pt-6 pb-4 mt-8 border-t-2 border-[#b8a989]">
-        <p className="text-base text-[#5a4a3a] font-cormorant">
-          The Secret World is ©2025 Star Anvil Studios
+      <div className={`flex items-center justify-between pt-6 pb-4 mt-8 border-t ${isStarbreaker ? 'border-[#00d9ff]/30' : 'border-[#b8a989] border-t-2'}`}>
+        <p className={`text-base font-cormorant ${isStarbreaker ? 'text-[#a8c7d7]' : 'text-[#5a4a3a]'}`}>
+          {gameConfig.copyright}
         </p>
         <a
-          href="https://staranvilstudios.com/"
+          href={gameConfig.studioUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="hover:opacity-80 transition-opacity"
         >
           <img
-            src="/Star Anvil Logo NB.png"
+            src={gameConfig.studioLogo}
             alt="Star Anvil Studios"
             className="h-20 w-auto object-contain"
           />

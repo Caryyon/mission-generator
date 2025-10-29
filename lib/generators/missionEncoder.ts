@@ -1,4 +1,5 @@
 import { Card, Suit, Rank, GeneratedMission } from "@/types/mission";
+import { MissionData } from "@/types/game";
 import { generateMission } from "./missionGenerator";
 
 // Convert card to short string (e.g., "2H" for 2 of Hearts)
@@ -65,7 +66,7 @@ export function encodeMission(mission: GeneratedMission): string {
 }
 
 // Decode URL string back to mission
-export function decodeMission(encoded: string): GeneratedMission | null {
+export function decodeMission(encoded: string, missionData: MissionData): GeneratedMission | null {
   if (!encoded) return null;
 
   const cardStrings = encoded.split(",");
@@ -77,7 +78,7 @@ export function decodeMission(encoded: string): GeneratedMission | null {
   const primaryCards = cards.slice(0, 5);
   const additionalCards = cards.slice(5);
 
-  return generateMission(primaryCards, additionalCards.length > 0 ? additionalCards : undefined);
+  return generateMission(primaryCards, missionData, additionalCards.length > 0 ? additionalCards : undefined);
 }
 
 // Generate shareable URL for current mission

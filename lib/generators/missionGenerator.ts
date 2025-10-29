@@ -1,49 +1,39 @@
 import { Card, MissionElement, MissionElementCard, GeneratedMission, AdditionalDrawRequirement, Suit, Rank } from "@/types/mission";
-import {
-  LOCATION_DATA,
-  LOCATION_SUIT_MODIFIERS,
-  GOAL_DATA,
-  GOAL_SUIT_MODIFIERS,
-  OBJECT_DATA,
-  OBJECT_SUIT_LABELS,
-  OBSTACLE_DATA,
-  OBSTACLE_SUIT_MODIFIERS,
-  TWIST_DATA,
-  TWIST_SUIT_MODIFIERS,
-} from "./missionData";
+import { MissionData } from "@/types/game";
 
 export function generateMissionElement(
   element: MissionElement,
-  card: Card
+  card: Card,
+  missionData: MissionData
 ): MissionElementCard {
   let result = "";
   let suitModifier = "";
 
   switch (element) {
     case MissionElement.LOCATION:
-      result = LOCATION_DATA[card.rank];
-      suitModifier = LOCATION_SUIT_MODIFIERS[card.suit];
+      result = missionData.locations[card.rank];
+      suitModifier = missionData.locationSuitModifiers[card.suit];
       break;
 
     case MissionElement.GOAL:
-      result = GOAL_DATA[card.rank];
-      suitModifier = GOAL_SUIT_MODIFIERS[card.suit];
+      result = missionData.goals[card.rank];
+      suitModifier = missionData.goalSuitModifiers[card.suit];
       break;
 
     case MissionElement.OBJECT:
-      const objectType = OBJECT_SUIT_LABELS[card.suit];
-      result = OBJECT_DATA[card.suit][card.rank];
+      const objectType = missionData.objectSuitLabels[card.suit];
+      result = missionData.objects[card.suit][card.rank];
       suitModifier = `(${objectType})`;
       break;
 
     case MissionElement.OBSTACLE:
-      result = OBSTACLE_DATA[card.rank];
-      suitModifier = OBSTACLE_SUIT_MODIFIERS[card.suit];
+      result = missionData.obstacles[card.rank];
+      suitModifier = missionData.obstacleSuitModifiers[card.suit];
       break;
 
     case MissionElement.TWIST:
-      result = TWIST_DATA[card.rank];
-      suitModifier = TWIST_SUIT_MODIFIERS[card.suit];
+      result = missionData.twists[card.rank];
+      suitModifier = missionData.twistSuitModifiers[card.suit];
       break;
   }
 
@@ -139,18 +129,18 @@ export function detectAdditionalDraws(twistCard: Card): AdditionalDrawRequiremen
   return requirements;
 }
 
-export function generateMission(cards: Card[], additionalCards?: Card[]): GeneratedMission {
+export function generateMission(cards: Card[], missionData: MissionData, additionalCards?: Card[]): GeneratedMission {
   const [locationCard, goalCard, objectCard, obstacleCard, twistCard] = cards;
 
-  const location = generateMissionElement(MissionElement.LOCATION, locationCard);
+  const location = generateMissionElement(MissionElement.LOCATION, locationCard, missionData);
   location.id = "primary-location";
-  const goal = generateMissionElement(MissionElement.GOAL, goalCard);
+  const goal = generateMissionElement(MissionElement.GOAL, goalCard, missionData);
   goal.id = "primary-goal";
-  const object = generateMissionElement(MissionElement.OBJECT, objectCard);
+  const object = generateMissionElement(MissionElement.OBJECT, objectCard, missionData);
   object.id = "primary-object";
-  const obstacle = generateMissionElement(MissionElement.OBSTACLE, obstacleCard);
+  const obstacle = generateMissionElement(MissionElement.OBSTACLE, obstacleCard, missionData);
   obstacle.id = "primary-obstacle";
-  const twist = generateMissionElement(MissionElement.TWIST, twistCard);
+  const twist = generateMissionElement(MissionElement.TWIST, twistCard, missionData);
   twist.id = "primary-twist";
 
   const additionalDrawRequirements = detectAdditionalDraws(twistCard);
@@ -174,7 +164,7 @@ export function generateMission(cards: Card[], additionalCards?: Card[]): Genera
 
       const req = additionalDrawRequirements[reqIndex];
       const card = additionalCards[cardIndex];
-      const element = generateMissionElement(req.element, card);
+      const element = generateMissionElement(req.element, card, missionData);
       element.id = `additional-${req.element}-${reqIndex}-${cardIndex}`;
 
       // Check if this additional element requires more draws (only if it's a twist-like element)

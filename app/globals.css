@@ -45,7 +45,7 @@
 
 :root {
   --radius: 0.125rem;
-  --background: #f4ead5;
+  --background: #ffffff;
   --foreground: #2a1810;
   --card: #f9f3e6;
   --card-foreground: #2a1810;
@@ -147,4 +147,112 @@
   box-shadow:
     0 4px 8px rgba(0, 0, 0, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Starbreaker Sci-Fi Theme */
+.starbreaker-card {
+  background: linear-gradient(135deg, #1a2f47 0%, #0f1d2e 100%);
+  border: 1px solid rgba(0, 217, 255, 0.3);
+  border-radius: 0.5rem;
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.starbreaker-card:hover {
+  border-color: rgba(0, 217, 255, 0.4);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.5),
+    0 0 32px rgba(0, 217, 255, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
+}
+
+/* Additional/highlighted cards with cyan glow */
+.starbreaker-card-highlight {
+  border: 1px solid rgba(0, 217, 255, 0.5);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.4),
+    0 0 24px rgba(0, 217, 255, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* Card header section with subtle gradient */
+.starbreaker-card-header {
+  padding: 1rem 1.25rem 0.75rem;
+  border-bottom: 1px solid rgba(0, 217, 255, 0.15);
+  background: linear-gradient(180deg, rgba(0, 217, 255, 0.05) 0%, transparent 100%);
+}
+
+/* Primary button - cyan gradient */
+.starbreaker-btn-primary {
+  background: linear-gradient(90deg, #00d9ff 0%, #0099cc 100%);
+  color: #0a1929;
+  border: none;
+  border-radius: 0.25rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  font-family: var(--font-cinzel);
+}
+
+.starbreaker-btn-primary:hover {
+  opacity: 0.9;
+}
+
+/* Secondary/outline button */
+.starbreaker-btn-secondary {
+  background: transparent;
+  color: #00d9ff;
+  border: 1px solid #00d9ff;
+  border-radius: 0.25rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-cinzel);
+}
+
+.starbreaker-btn-secondary:hover {
+  background: #00d9ff;
+  color: #0a1929;
+}
+
+.starbreaker-btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.starbreaker-btn-secondary:disabled:hover {
+  background: transparent;
+  color: #00d9ff;
+}
+
+/* Subtle glow effect for interactive elements */
+.starbreaker-glow {
+  box-shadow: 0 0 16px rgba(0, 217, 255, 0.3);
+}
+
+/* Reduced motion support for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .starbreaker-card {
+    transition: none;
+  }
+
+  .starbreaker-card:hover {
+    transform: none;
+  }
+
+  .starbreaker-btn-primary,
+  .starbreaker-btn-secondary {
+    transition: none;
+  }
 }
